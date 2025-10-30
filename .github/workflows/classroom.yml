@@ -1,0 +1,50 @@
+name: Autograding Tests
+'on':
+- push
+- repository_dispatch
+permissions:
+  checks: write
+  actions: read
+  contents: read
+jobs:
+  run-autograding-tests:
+    runs-on: ubuntu-latest
+    if: github.actor != 'github-classroom[bot]'
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+    - name: Character Creation Tests
+      id: character-creation-tests
+      uses: classroom-resources/autograding-command-grader@v1
+      with:
+        test-name: Character Creation Tests
+        setup-command: pip install pytest
+        command: python -m pytest tests/test_character_creation.py -v
+        timeout: 10
+        max-score: 25
+    - name: File Operations Tests
+      id: file-operations-tests
+      uses: classroom-resources/autograding-command-grader@v1
+      with:
+        test-name: File Operations Tests
+        setup-command: pip install pytest
+        command: python -m pytest tests/test_file_operations.py -v
+        timeout: 10
+        max-score: 20
+    - name: Comprehensive Tests
+      id: comprehensive-tests
+      uses: classroom-resources/autograding-command-grader@v1
+      with:
+        test-name: Comprehensive Tests
+        setup-command: pip install pytest
+        command: python -m pytest tests/test_comprehensive.py -v
+        timeout: 10
+        max-score: 15
+    - name: Autograding Reporter
+      uses: classroom-resources/autograding-grading-reporter@v1
+      env:
+        CHARACTER-CREATION-TESTS_RESULTS: "${{steps.character-creation-tests.outputs.result}}"
+        FILE-OPERATIONS-TESTS_RESULTS: "${{steps.file-operations-tests.outputs.result}}"
+        COMPREHENSIVE-TESTS_RESULTS: "${{steps.comprehensive-tests.outputs.result}}"
+      with:
+        runners: character-creation-tests,file-operations-tests,comprehensive-tests
